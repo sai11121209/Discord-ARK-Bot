@@ -9,6 +9,8 @@ except ImportError:
 
     if os.getenv("TOKEN"):
         TOKEN = os.getenv("TOKEN")
+        USER_AGENT = os.getenv("USER_AGENT")
+        CONTENT_TYPE = os.getenv("CONTENT_TYPE")
 
     keep_alive.keep_alive()
 
@@ -18,8 +20,8 @@ client = discord.Client()
 Prefix = "/"
 
 headers = {
-    "User-Agent": "Discord.py",
-    "Content-Type": "application/json",
+    "User-Agent": USER_AGENT,
+    "Content-Type": CONTENT_TYPE,
 }
 
 
@@ -36,7 +38,7 @@ async def on_message(message):
     if message.author.bot:
         pass
     elif Prefix == message.content[0]:
-        if message.content.upper() == f"{Prefix}STARTSERVER":
+        if message.content.upper() == f"{Prefix}RUNSERVER":
             res = rq.get(
                 "http://27.91.71.82/commands/wake_on_lan", headers=headers
             ).json()
