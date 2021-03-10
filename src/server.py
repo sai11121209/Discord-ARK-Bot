@@ -55,18 +55,21 @@ def Shutdown():
     if not request.headers.get("Content-Type") == CONTENT_TYPE:
         error_message = {"state": 0, "error": "Invalid Content-Type."}
         return make_response(jsonify(error_message), 400)
-    mcr = MCRcon(IPADDRESS, PASSWORD, RCONPORT)
-    mcr.connect()
-    resp = mcr.command("saveworld")
-    mcr.command(
-        "Broadcast The world has been saved. The server will be shutdown in 1 minute."
-    )
-    time.sleep(60)
-    resp = mcr.command("saveworld")
-    mcr.command("Broadcast Stop the server.")
-    mcr.command("DoExit")
-    print(resp)
-    mcr.disconnect()
+    try:
+        mcr = MCRcon(IPADDRESS, PASSWORD, RCONPORT)
+        mcr.connect()
+        resp = mcr.command("saveworld")
+        mcr.command(
+            "Broadcast The world has been saved. The server will be shutdown in 1 minute."
+        )
+        time.sleep(60)
+        resp = mcr.command("saveworld")
+        mcr.command("Broadcast Stop the server.")
+        mcr.command("DoExit")
+        print(resp)
+        mcr.disconnect()
+    except:
+        pass
     session = winrm.Session(IPADDRESS, auth=(USER, PASSWORD))
     try:
         session.run_ps("shutdown -s -f -t 120")
