@@ -1,5 +1,7 @@
 import os
 import discord
+import difflib
+import itertools
 import requests as rq
 
 try:
@@ -24,12 +26,19 @@ headers = {
     "Content-Type": CONTENT_TYPE,
 }
 
+CommandList = {
+    "サーバ起動": ["RUNSERVER"],
+    "サーバ停止": ["STOPSERVER"],
+}
+
 
 @client.event
 async def on_ready():
     # 起動したらターミナルにログイン通知が表示される
     print("ログインしました")
-    await client.change_presence(activity=discord.Game(name="ARK", type=1))
+    await client.change_presence(
+        activity=discord.Game(name="ARK: Survival Evolved", type=1)
+    )
 
 
 # メッセージ受信時に動作する処理
@@ -49,6 +58,8 @@ async def on_message(message):
                     await message.channel.send("リクエストに失敗しました。")
                 else:
                     await message.channel.send("起動処理が失敗しました。")
+            return 0
+
         elif message.content.upper() == f"{Prefix}STOPSERVER":
             res = rq.get("http://27.91.71.82/commands/shutdown", headers=headers).json()
             if res["state"] == 1:
@@ -58,6 +69,40 @@ async def on_message(message):
                     await message.channel.send("リクエストに失敗しました。")
                 else:
                     await message.channel.send("終了処理が失敗しました。")
+            return 0
+
+        elif message.content.upper() == f"{Prefix}HELP":
+            Embed = discord.Embed(
+                title="ヘルプ", description="ARK Bot使用可能コマンド一覧", color=0x2ECC69,
+            )
+            for Key, Values in CommandList.items():
+                if type(Values) == list:
+                    Text = ""
+                    for Value in Values:
+                        Text += f"{Prefix}{Value}\n"
+                else:
+                    Text = f"{Prefix}{Values}\n"
+                Embed.add_field(name=f"{Key}コマンド", value=Text, inline=False)
+                Embed.set_footer(text="コマンドは大文字小文字不問です。")
+            await message.channel.send(embed=Embed)
+            return 0
+
+        hints = [
+            Command
+            for Command in list(itertools.chain.from_iterable(CommandList.values()))
+            if difflib.SequenceMatcher(
+                None, message.content.upper(), Prefix + Command
+            ).ratio()
+            >= 0.65
+        ]
+
+        if len(hints) > 0:
+            Text = "Hint: もしかして以下のコマンドですか?\n"
+            for n, hint in enumerate(hints):
+                Text += f"{n+1}. {Prefix}{hint}\n"
+            Text += "これ以外に使えるコマンドは /help で確認できます。"
+            await message.channel.send(Text)
+            return 0
 
 
 client.run(TOKEN)

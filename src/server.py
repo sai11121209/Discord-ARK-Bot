@@ -1,8 +1,10 @@
 from flask import Flask, request, jsonify, make_response
 from threading import Thread
+from mcrcon import MCRcon
 import subprocess
 import winrm
 import os
+import time
 
 app = Flask("")
 
@@ -16,6 +18,7 @@ except ImportError:
         MACADDRESS = os.getenv("MACADDRESS")
         USER = os.getenv("USER")
         PASSWORD = os.getenv("PASSWORD")
+        RCONPORT = os.getenv("RCONPORT")
 
 
 @app.route("/")
@@ -52,9 +55,21 @@ def Shutdown():
     if not request.headers.get("Content-Type") == "application/json":
         error_message = {"state": 0, "error": "Invalid Content-Type."}
         return make_response(jsonify(error_message), 400)
+    mcr = MCRcon(IPADDRESS, PASSWORD, RCONPORT)
+    mcr.connect()
+    resp = mcr.command("saveworld")
+    mcr.command(
+        "Broadcast The world has been saved. The server will be shutdown in 1 minute."
+    )
+    time.sleep(60)
+    resp = mcr.command("saveworld")
+    mcr.command("Broadcast Stop the server.")
+    mcr.command("DoExit")
+    print(resp)
+    mcr.disconnect()
     session = winrm.Session(IPADDRESS, auth=(USER, PASSWORD))
     try:
-        session.run_ps("shutdown -s -f -t 0")
+        session.run_ps("shutdown -s -f -t 120")
         success_message = {"state": 1, "body": "The request was executed successfully."}
     except:
         success_message = {
