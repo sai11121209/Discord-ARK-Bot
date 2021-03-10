@@ -49,10 +49,10 @@ def WakeOnLan():
 
 @app.route("/commands/shutdown")
 def Shutdown():
-    if not request.headers.get("User-Agent") == "Discord.py":
+    if not request.headers.get("User-Agent") == USER_AGENT:
         error_message = {"state": 0, "error": "Invalid User-Agent."}
         return make_response(jsonify(error_message), 400)
-    if not request.headers.get("Content-Type") == "application/json":
+    if not request.headers.get("Content-Type") == CONTENT_TYPE:
         error_message = {"state": 0, "error": "Invalid Content-Type."}
         return make_response(jsonify(error_message), 400)
     mcr = MCRcon(IPADDRESS, PASSWORD, RCONPORT)
