@@ -1,0 +1,4 @@
+<your_venv>
+__pycache__
+local_settings.py
+local_settings.cpython-38.pyc
